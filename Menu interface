@@ -1,0 +1,126 @@
+ .model large
+.stack 1000h
+
+.data
+m1  db 10,13,10,13, '            XXXXXXWelcome to our store!XXXXXX',10,13,'$'
+m2  db 10,13,10,13,'Enter your Choice',10,13,'$'
+
+m3  db 10,13,' xxx   1.Drinks         xxx',10,13,'$'
+m4  db 10,13,' xxx   2.Chips          xxx',10,13,'$'
+m5  db 10,13,' xxx   3.Bakery         xxx',10,13,'$'
+m6  db 10,13,' xxx   4.Dairy          xxx',10,13,'$'
+m7  db 10,13,' xxx   5.Frozen Food    xxx',10,13,'$'
+
+m8  db 10,13,10,13,' XXXChoose your food from the menu xxx',10,13,'$' 
+
+; Drinks section
+m9  db 10,13,' xx  1.Mountain dew     TK.30   xx',10,13,'$'
+m10 db 10,13,' xx 2.Chocolate milk     TK.40   xx',10,13,'$'
+m11 db 10,13,' xx 3.Pepsi            TK.30   xx',10,13,'$'
+m12 db 10,13,' xx 4.Frutika          TK.15   xx',10,13,'$'
+
+; Chips section
+m13 db 10,13,' xx  1.LAYS        TK.50   xx',10,13,'$'
+m14 db 10,13,' xx 2. Doritos     TK.40   xx',10,13,'$'
+m15 db 10,13,' xx 3.Kurkure      TK.30   xx',10,13,'$'
+m16 db 10,13,' xx 4.Pringles     TK.315   xx',10,13,'$'
+
+; Bakery section
+m17 db 10,13,' xx  1.Chocolate cake        TK.150   xx',10,13,'$'
+m18 db 10,13,' xx 2. Croissant     TK.40   xx',10,13,'$'
+m19 db 10,13,' xx 3.Dry cake      TK.100   xx',10,13,'$'
+m20 db 10,13,' xx 4.Bread     TK.55   xx',10,13,'$'
+
+; Dairy section
+m21 db 10,13,' xx  1.Milk        TK.50   xx',10,13,'$'
+m22 db 10,13,' xx 2.Yogurt       TK.40   xx',10,13,'$'
+m23 db 10,13,' xx 3.Butter       TK.80   xx',10,13,'$'
+m24 db 10,13,' xx 4.Cheese       TK.120   xx',10,13,'$'
+
+; Frozen Food section
+m25 db 10,13,' xx  1.Ice Cream      TK.100   xx',10,13,'$'
+m26 db 10,13,' xx 2.Frozen Pizza   TK.200   xx',10,13,'$'
+m27 db 10,13,' xx 3.French Fries   TK.60   xx',10,13,'$'
+m28 db 10,13,' xx 4.Veggies       TK.80   xx',10,13,'$'
+.code
+main:
+    ; Print welcome message
+    mov ah, 09
+    lea dx, m1
+    int 21h
+
+    ; Print choice prompt
+    lea dx, m2
+    int 21h
+
+    ; Print menu options
+    lea dx, m3
+    int 21h
+    lea dx, m4
+    int 21h
+    lea dx, m5
+    int 21h
+    lea dx, m6
+    int 21h
+    lea dx, m7
+    int 21h
+
+    ; Print menu for food selection
+    lea dx, m8
+    int 21h
+
+    ; Display drinks menu
+    lea dx, m9
+    int 21h
+    lea dx, m10
+    int 21h
+    lea dx, m11
+    int 21h
+    lea dx, m12
+    int 21h
+
+    ; Display chips menu
+    lea dx, m13
+    int 21h
+    lea dx, m14
+    int 21h
+    lea dx, m15
+    int 21h
+    lea dx, m16
+    int 21h
+
+    ; Display bakery menu
+    lea dx, m17
+    int 21h
+    lea dx, m18
+    int 21h
+    lea dx, m19
+    int 21h
+    lea dx, m20
+    int 21h
+
+    ; Display dairy menu
+    lea dx, m21
+    int 21h
+    lea dx, m22
+    int 21h
+    lea dx, m23
+    int 21h
+    lea dx, m24
+    int 21h
+
+    ; Display frozen food menu
+    lea dx, m25
+    int 21h
+    lea dx, m26
+    int 21h
+    lea dx, m27
+    int 21h
+    lea dx, m28
+    int 21h
+
+    ; End program
+    mov ah, 4Ch
+    int 21h
+
+end main
