@@ -1,0 +1,354 @@
+.model large
+.stack 1000h
+
+.data 
+password db 'Zaim$'               ; Correct password
+input_pass db 5 dup(?)            ; Buffer for 4 characters + '$'
+newline db 13,10,'$'
+enter_pass db 13,10,'Enter Password: $'  ; <-- FIXED LINE
+wrong_pass db 13,10,'Incorrect Password! Access Denied.$'
+
+; Main and prompt messages
+m1  db 10,13,'            XXXXXXWelcome to our store!XXXXXX$',10,13
+m2  db 10,13,'Enter your Choice (1-5): $'
+
+m3  db 10,13,'  ** 1. Drinks Menu             **$'
+m4  db 10,13,'  ** 2. Chips Menu              **$'
+m5  db 10,13,'  ** 3. Bakery Menu             **$'
+m6  db 10,13,'  ** 4. Dairy Items             **$'
+m7  db 10,13,'  ** 5. Frozen Food Menu        **$'
+
+m8  db 10,13,'  ** Choose your food from the menu **$'
+
+; Drinks
+m9  db 10,13,'  ** 1. Mountain Dew      TK.30 **$'
+m10 db 10,13,'  ** 2. Chocolate Milk    TK.40 **$'
+m11 db 10,13,'  ** 3. Pepsi             TK.30 **$'
+m12 db 10,13,'  ** 4. Frutika           TK.15 **$'
+m13 db 10,13,'  ** 5. Coffee            TK.50 **$'
+m14 db 10,13,'  ** 6. Orange Juice      TK.60 **$'
+
+; Chips
+m15 db 10,13,'  ** 1. LAYS              TK.50 **$'
+m16 db 10,13,'  ** 2. Doritos           TK.40 **$'
+m17 db 10,13,'  ** 3. Kurkure           TK.30 **$'
+m18 db 10,13,'  ** 4. Pringles          TK.315**$'
+m19 db 10,13,'  ** 5. Potato Crackers   TK.25 **$'
+m20 db 10,13,'  ** 6. Tortilla Chips    TK.45 **$'
+
+; Bakery
+m21 db 10,13,'  ** 1. Chocolate Cake    TK.150**$'
+m22 db 10,13,'  ** 2. Croissant         TK.40 **$'
+m23 db 10,13,'  ** 3. Dry Cake          TK.100**$'
+m24 db 10,13,'  ** 4. Bread             TK.55 **$'
+m25 db 10,13,'  ** 5. Pastry            TK.70 **$'
+m26 db 10,13,'  ** 6. Biscuit           TK.30 **$'
+
+; Dairy
+m27 db 10,13,'  ** 1. Milk              TK.50 **$'
+m28 db 10,13,'  ** 2. Yogurt            TK.40 **$'
+m29 db 10,13,'  ** 3. Butter            TK.80 **$'
+m30 db 10,13,'  ** 4. Cheese            TK.120**$'
+m31 db 10,13,'  ** 5. Curd              TK.35 **$'
+m32 db 10,13,'  ** 6. Flavored Milk     TK.55 **$'
+
+; Frozen
+m33 db 10,13,'  ** 1. Ice-Cream         TK.100**$'
+m34 db 10,13,'  ** 2. Frozen Pizza      TK.200**$'
+m35 db 10,13,'  ** 3. French Fries      TK.60 **$'
+m36 db 10,13,'  ** 4. Frozen Samosa     TK.80 **$'
+m37 db 10,13,'  ** 5. Frozen Nuggets    TK.150**$'
+m38 db 10,13,'  ** 6. Frozen Paratha    TK.90 **$'
+
+invalidMsg db 10,13,'*** Invalid Entry! Please try again ***$',13,10,'$'
+
+M57 DB 10,13,10,13,'Enter your order: $'
+M58 DB 10,13,'Quantity: $'
+M59 DB 10,13,'Total Price: $'
+
+DRINK DB ?
+QUANTITY DB ?
+
+M60 DB 10,13,10,13,'1.Go Back to Main Menu$'
+M61 DB 10,13,'2.EXIT$'
+
+
+.code
+main:
+    mov ax, @data
+    mov ds, ax
+
+; ---- PASSWORD SECTION ----
+    lea dx, enter_pass
+    call print_str
+
+    lea si, input_pass
+    mov cx, 4
+read_loop:
+    call read_char
+    mov [si], al
+    inc si
+    loop read_loop
+    mov byte ptr [si], '$'        ; Null-terminate input
+
+    lea si, input_pass
+    lea di, password
+compare_loop:
+    mov al, [si]
+    cmp al, [di]
+    jne not_equal
+    cmp al, '$'
+    je equal
+    inc si
+    inc di
+    jmp compare_loop
+
+equal:
+    jmp main_menu
+
+not_equal:
+    lea dx, wrong_pass
+    call print_str
+    jmp exit_program
+
+
+main_menu:
+    lea dx, m1
+    mov ah, 9
+    int 21h
+
+    lea dx, m3
+    mov ah, 9
+    int 21h
+
+    lea dx, m4
+    mov ah, 9
+    int 21h
+
+    lea dx, m5
+    mov ah, 9
+    int 21h
+
+    lea dx, m6
+    mov ah, 9
+    int 21h
+
+    lea dx, m7
+    mov ah, 9
+    int 21h
+
+    lea dx, m2
+    mov ah, 9
+    int 21h
+
+    mov ah, 1
+    int 21h
+    sub al, '0'
+    mov bl, al
+
+    cmp bl, 1
+    je drinks
+    cmp bl, 2
+    je chips
+    cmp bl, 3
+    je bakery
+    cmp bl, 4
+    je dairy
+    cmp bl, 5
+    je frozen
+
+    lea dx, invalidMsg
+    mov ah, 9
+    int 21h
+    jmp main_menu
+
+;========================= Drinks ===========================
+drinks:
+    lea dx, m8
+    mov ah, 9
+    int 21h
+
+    lea dx, m9
+    mov ah, 9
+    int 21h
+    lea dx, m10
+    mov ah, 9
+    int 21h
+    lea dx, m11
+    mov ah, 9
+    int 21h
+    lea dx, m12
+    mov ah, 9
+    int 21h
+    lea dx, m13
+    mov ah, 9
+    int 21h
+    lea dx, m14
+    mov ah, 9
+    int 21h
+    jmp order_input
+
+;========================= Chips ===========================
+chips:
+    lea dx, m8
+    mov ah, 9
+    int 21h
+
+    lea dx, m15
+    mov ah, 9
+    int 21h
+    lea dx, m16
+    mov ah, 9
+    int 21h
+    lea dx, m17
+    mov ah, 9
+    int 21h
+    lea dx, m18
+    mov ah, 9
+    int 21h
+    lea dx, m19
+    mov ah, 9
+    int 21h
+    lea dx, m20
+    mov ah, 9
+    int 21h
+    jmp order_input
+
+;========================= Bakery ===========================
+bakery:
+    lea dx, m8
+    mov ah, 9
+    int 21h
+
+    lea dx, m21
+    mov ah, 9
+    int 21h
+    lea dx, m22
+    mov ah, 9
+    int 21h
+    lea dx, m23
+    mov ah, 9
+    int 21h
+    lea dx, m24
+    mov ah, 9
+    int 21h
+    lea dx, m25
+    mov ah, 9
+    int 21h
+    lea dx, m26
+    mov ah, 9
+    int 21h
+    jmp order_input
+
+;========================= Dairy ===========================
+dairy:
+    lea dx, m8
+    mov ah, 9
+    int 21h
+
+    lea dx, m27
+    mov ah, 9
+    int 21h
+    lea dx, m28
+    mov ah, 9
+    int 21h
+    lea dx, m29
+    mov ah, 9
+    int 21h
+    lea dx, m30
+    mov ah, 9
+    int 21h
+    lea dx, m31
+    mov ah, 9
+    int 21h
+    lea dx, m32
+    mov ah, 9
+    int 21h
+    jmp order_input
+
+;========================= Frozen ===========================
+frozen:
+    lea dx, m8
+    mov ah, 9
+    int 21h
+
+    lea dx, m33
+    mov ah, 9
+    int 21h
+    lea dx, m34
+    mov ah, 9
+    int 21h
+    lea dx, m35
+    mov ah, 9
+    int 21h
+    lea dx, m36
+    mov ah, 9
+    int 21h
+    lea dx, m37
+    mov ah, 9
+    int 21h
+    lea dx, m38
+    mov ah, 9
+    int 21h
+    jmp order_input
+
+;========================= Order Input ===========================
+order_input:
+    lea dx, newline
+    mov ah, 9
+    int 21h
+
+    lea dx, M57
+    mov ah, 9
+    int 21h
+
+    mov ah, 1
+    int 21h
+    sub al, '0'
+    mov DRINK, al
+
+    lea dx, M58
+    mov ah, 9
+    int 21h
+
+    mov ah, 1
+    int 21h
+    sub al, '0'
+    mov QUANTITY, al
+
+    lea dx, M60
+    mov ah, 9
+    int 21h
+
+    lea dx, M61
+    mov ah, 9
+    int 21h
+
+    mov ah, 1
+    int 21h
+    cmp al, '1'
+    je main_menu
+    cmp al, '2'
+    je exit_program
+    jmp main_menu
+
+;========================= Exit ===========================
+exit_program:
+    mov ah, 4Ch
+    int 21h
+
+
+;========================= Helper Procedures ===========================
+print_str proc
+    mov ah, 9
+    int 21h
+    ret
+print_str endp
+
+read_char proc
+    mov ah, 1
+    int 21h
+    ret
+read_char endp
+
+end main
