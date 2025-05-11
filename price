@@ -1,0 +1,83 @@
+update_price:
+    lea dx, update_price_title
+    call print_str
+
+    ; Choose category
+    lea dx, choose_category
+    call print_str
+    call read_char
+    sub al, '0'
+    cmp al, 1
+    jb update_price     ; invalid input
+    cmp al, 5
+    ja update_price     ; invalid input
+    mov CATEGORY, al    ; save selected category (1-5)
+
+    ; Choose item
+    lea dx, choose_item
+    call print_str
+    call read_char
+    sub al, '0'
+    cmp al, 1
+    jb update_price
+    cmp al, 6
+    ja update_price
+    dec al              ; convert to 0-based index
+    mov bl, al          ; item index ? BL
+
+    ; Ask for new price (2-digit)
+    lea dx, new_price_msg
+    call print_str
+
+    ; Read first digit
+    call read_char
+    sub al, '0'
+    mov ah, 0
+    mov cx, 10
+    mul cx              ; AL * 10 ? AX
+    mov bh, al          ; store tens*10 in BH
+
+    ; Read second digit
+    call read_char
+    sub al, '0'
+    add bh, al          ; BH = final 2-digit price
+
+    ; Determine array base pointer based on category
+    mov al, CATEGORY
+    cmp al, 1
+    je update_drink
+    cmp al, 2
+    je update_chip
+    cmp al, 3
+    je update_bakery
+    cmp al, 4
+    je update_dairy
+    cmp al, 5
+    je update_frozen
+    jmp start_menu      ; fallback
+
+update_drink:
+    lea di, drink_prices
+    jmp update_done
+update_chip:
+    lea di, chip_prices
+    jmp update_done
+update_bakery:
+    lea di, bakery_prices
+    jmp update_done
+update_dairy:
+    lea di, dairy_prices
+    jmp update_done
+update_frozen:
+    lea di, frozen_prices
+    jmp update_done
+
+update_done:
+    mov al, bl         ; item index from earlier
+    cbw                ; convert to word in AX
+    add di, ax         ; move to correct item address
+    mov [di], bh       ; store updated price
+    lea dx, price_updated_msg
+    call print_str
+    jmp start_menu
+
