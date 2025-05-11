@@ -1,0 +1,1220 @@
+ .model large
+.stack 1000h
+
+.data 
+password db 'Zaim$'               ; Correct password
+input_pass db 5 dup(?)            ; Buffer for 4 characters + '$'
+newline db 13,10,'$'
+enter_pass db 13,10,'Enter Password: $'  ; <-- FIXED LINE
+wrong_pass db 13,10,'Incorrect Password! Access Denied.$'
+
+;MAIN
+start_msg db 10,13,'Select an option:',10,13,'1. Check Menu',10,13,'2. Check Stock',10,13,'3. Update Price$'
+update_price_msg db 10,13,'Price update feature coming soon!$'
+
+
+;===============for cart==============================  
+; NEW CART MESSAGES 
+M62 DB 10,13,'3.Show Cart$'       
+cart_title db 13,10,'=== YOUR CART ===$'
+cart_empty db 13,10,'Your cart is empty$'
+cart_item db 13,10,'Item: $'
+cart_qty db ' | Qty: $'
+cart_price db ' | Price: TK.$'
+cart_total db 13,10,'Total: TK.$'
+cart_return db 13,10,'Press any key to return...$'
+cart_full_msg db 13,10,'Cart is full! Please checkout or clear cart.$'
+debug_cart_msg db 13,10,'=== RAW CART CONTENTS ===$'
+
+
+;for cart options
+m_cart_options2 db 13,10,'1. Clear Cart  2. Add More  3. Checkout$'
+m_cart_choice2   db 13,10,'Choice: $'
+m_del2   db 13,10,'Enter item # to delete (0 to cancel): $'
+m_del_succes2  db 13,10,'Cart cleared!$'
+checkout_msg   db 13,10,'Thank you! Press any key to exit...$'
+
+
+; CART SYSTEM
+cart            db 200 dup('$')   ; "Item,Qty,Price;Item2,Qty,Price;..."
+cart_size       dw 0              
+grand_total     dw 0             
+
+; Cart Messages
+m_cart_title    db 13,10,'=== YOUR SHOPPING CART ===$'
+m_cart_empty    db 13,10,'(Cart is empty)$'
+m_cart_header   db 13,10,'No. Item            Qty  Price$'
+m_cart_item     db 13,10,'$'
+m_cart_total    db 13,10,'Grand Total: TK.$'
+m_del_prompt   db 13,10,'Enter item # to delete (0 to cancel): $'
+m_del_success   db 13,10,'Item removed!$'
+m_cart_options  db 13,10,'1. Delete Item  2. Add More  3. Checkout$'
+m_cart_choice   db 13,10,'Choice: $'
+                                     
+
+
+; PRICE LOOKUP TABLES 
+drink_prices   db 30,40,30,15,50,60    
+chip_prices    db 50,40,30,35,25,45    
+bakery_prices  db 95,40,90,55,70,30     
+dairy_prices   db 50,40,80,95,35,55    
+frozen_prices  db 90,95,60,80,95,90 
+
+current_menu db 1      ; 1=drinks, 2=chips, 3=bakery, 4=dairy, 5=frozen
+;==============end_cart========================================
+
+
+; Main and prompt messages
+m1  db 10,13,'            XXXXXXWelcome to our store!XXXXXX$',10,13
+m2  db 10,13,'Enter your Choice (1-5): $'
+
+m3  db 10,13,'  ** 1. Drinks Menu             **$'
+m4  db 10,13,'  ** 2. Chips Menu              **$'
+m5  db 10,13,'  ** 3. Bakery Menu             **$'
+m6  db 10,13,'  ** 4. Dairy Items             **$'
+m7  db 10,13,'  ** 5. Frozen Food Menu        **$'
+
+m8  db 10,13,'  ** Choose your food from the menu **$'
+
+; Drinks
+m9  db 10,13,'  ** 1. Mountain Dew      TK.30 **$'
+m10 db 10,13,'  ** 2. Chocolate Milk    TK.40 **$'
+m11 db 10,13,'  ** 3. Pepsi             TK.30 **$'
+m12 db 10,13,'  ** 4. Frutika           TK.15 **$'
+m13 db 10,13,'  ** 5. Coffee            TK.50 **$'
+m14 db 10,13,'  ** 6. Orange Juice      TK.60 **$'
+
+; Chips
+m15 db 10,13,'  ** 1. LAYS              TK.50 **$'
+m16 db 10,13,'  ** 2. Doritos           TK.40 **$'
+m17 db 10,13,'  ** 3. Kurkure           TK.30 **$'
+m18 db 10,13,'  ** 4. Pringles          TK.35**$'
+m19 db 10,13,'  ** 5. Potato Crackers   TK.25 **$'
+m20 db 10,13,'  ** 6. Tortilla Chips    TK.45 **$'
+
+; Bakery
+m21 db 10,13,'  ** 1. Chocolate Cake    TK.95 **$'
+m22 db 10,13,'  ** 2. Croissant         TK.40 **$'
+m23 db 10,13,'  ** 3. Dry Cake          TK.90**$'
+m24 db 10,13,'  ** 4. Bread             TK.55 **$'
+m25 db 10,13,'  ** 5. Pastry            TK.70 **$'
+m26 db 10,13,'  ** 6. Biscuit           TK.30 **$'
+
+; Dairy
+m27 db 10,13,'  ** 1. Milk              TK.50 **$'
+m28 db 10,13,'  ** 2. Yogurt            TK.40 **$'
+m29 db 10,13,'  ** 3. Butter            TK.80 **$'
+m30 db 10,13,'  ** 4. Cheese            TK.95 **$'
+m31 db 10,13,'  ** 5. Curd              TK.35 **$'
+m32 db 10,13,'  ** 6. Flavored Milk     TK.55 **$'
+
+; Frozen
+m33 db 10,13,'  ** 1. Ice-Cream         TK.90 **$'
+m34 db 10,13,'  ** 2. Frozen Pizza      TK.95 **$'
+m35 db 10,13,'  ** 3. French Fries      TK.60 **$'
+m36 db 10,13,'  ** 4. Frozen Samosa     TK.80 **$'
+m37 db 10,13,'  ** 5. Frozen Nuggets    TK.95 **$'
+m38 db 10,13,'  ** 6. Frozen Paratha    TK.90 **$'
+
+invalidMsg db 10,13,'*** Invalid Entry! Please try again ***$',13,10,'$'
+M57 DB 10,13,10,13,'Enter your order: $'
+M58 DB 10,13,'Quantity: $'
+M59 DB 10,13,'Total Price: $'
+
+DRINK DB ?
+QUANTITY DB ?
+
+M60 DB 10,13,10,13,'1.Go Back to Main Menu$'
+M61 DB 10,13,'2.EXIT$'  
+
+;for stock 
+
+; --- Stock Arrays for each category ---
+drinks_stock db 5, 5, 5, 5, 5, 5
+chips_stock  db 5, 5, 5, 5, 5, 5
+bakery_stock db 5, 5, 5, 5, 5, 5
+dairy_stock  db 5, 5, 5, 5, 5, 5
+frozen_stock db 5, 5, 5, 5, 5, 5
+
+stock_msg db 13,10,'Current Stock Levels:',13,10,'$'
+low_stock_msg db ' - LOW STOCK!$', 13,10
+
+;for tracking stock
+CATEGORY DB ?      ; 1=Drinks, 2=Chips, ..., 5=Frozen
+
+
+qty_label db 'Quantity: $'
+
+
+.code
+main:
+    mov ax, @data
+    mov ds, ax
+
+; ---- PASSWORD SECTION ----
+    password_check:
+    lea dx, enter_pass
+    call print_str
+
+    lea si, input_pass
+    mov cx, 4
+read_loop:
+    call read_char
+    mov [si], al
+    inc si
+    loop read_loop
+    mov byte ptr [si], '$'
+
+    lea si, input_pass
+    lea di, password
+compare_loop:
+    mov al, [si]
+    cmp al, [di]
+    jne wrong
+    cmp al, '$'
+    je correct
+    inc si
+    inc di
+    jmp compare_loop
+
+wrong:
+    lea dx, wrong_pass
+    call print_str
+    jmp password_check
+
+correct:
+    jmp start_menu
+        
+        
+;startmenu
+start_menu:
+    lea dx, start_msg
+    call print_str
+
+    mov ah, 1
+    int 21h
+    sub al, '0'
+    cmp al, 1
+    je main_menu      ; your existing menu logic
+    cmp al, 2
+    je view_stock     ; your stock view logic
+    cmp al, 3
+    je update_price
+    jmp start_menu
+                  
+                  
+update_price:
+    lea dx, update_price_msg
+    call print_str
+    jmp start_menu                  
+                  
+view_stock:
+    lea dx, stock_msg
+    call print_str
+
+    ; ------- Drinks -------
+    mov dx, 13
+    call new_line
+    lea dx, m3    ; Category header
+    call print_str
+    lea si, drinks_stock
+    lea dx, m9
+    call print_str
+    call print_quantity
+    lea dx, m10
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m11
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m12
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m13
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m14
+    call print_str
+    inc si
+    call print_quantity
+
+    ; ------- Chips -------
+    mov dx, 13
+    call new_line
+    lea dx, m4
+    call print_str
+    lea si, chips_stock
+    lea dx, m15
+    call print_str
+    call print_quantity
+    lea dx, m16
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m17
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m18
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m19
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m20
+    call print_str
+    inc si
+    call print_quantity
+
+    ; ------- Bakery -------
+    mov dx, 13
+    call new_line
+    lea dx, m5
+    call print_str
+    lea si, bakery_stock
+    lea dx, m21
+    call print_str
+    call print_quantity
+    lea dx, m22
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m23
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m24
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m25
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m26
+    call print_str
+    inc si
+    call print_quantity
+
+    ; ------- Dairy -------
+    mov dx, 13
+    call new_line
+    lea dx, m6
+    call print_str
+    lea si, dairy_stock
+    lea dx, m27
+    call print_str
+    call print_quantity
+    lea dx, m28
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m29
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m30
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m31
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m32
+    call print_str
+    inc si
+    call print_quantity
+
+    ; ------- Frozen -------
+    mov dx, 13
+    call new_line
+    lea dx, m7
+    call print_str
+    lea si, frozen_stock
+    lea dx, m33
+    call print_str
+    call print_quantity
+    lea dx, m34
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m35
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m36
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m37
+    call print_str
+    inc si
+    call print_quantity
+    lea dx, m38
+    call print_str
+    inc si
+    call print_quantity
+
+    jmp start_menu
+
+     
+
+main_menu:
+    lea dx, m1
+    mov ah, 9
+    int 21h
+
+    lea dx, m3
+    mov ah, 9
+    int 21h
+
+    lea dx, m4
+    mov ah, 9
+    int 21h
+
+    lea dx, m5
+    mov ah, 9
+    int 21h
+
+    lea dx, m6
+    mov ah, 9
+    int 21h
+
+    lea dx, m7
+    mov ah, 9
+    int 21h
+
+    lea dx, m2
+    mov ah, 9
+    int 21h
+
+    mov ah, 1
+    int 21h
+    sub al, '0'
+    mov bl, al
+
+    cmp bl, 1
+    je drinks
+    cmp bl, 2
+    je chips
+    cmp bl, 3
+    je bakery
+    cmp bl, 4
+    je dairy
+    cmp bl, 5
+    je frozen
+    
+    cmp bl, 6
+    je view_stock
+
+    lea dx, invalidMsg
+    mov ah, 9
+    int 21h
+    jmp main_menu 
+    
+
+;========================= Drinks ===========================
+drinks:
+    lea dx, m8
+    mov ah, 9
+    int 21h
+
+    lea dx, m9
+    mov ah, 9
+    int 21h
+    lea dx, m10
+    mov ah, 9
+    int 21h
+    lea dx, m11
+    mov ah, 9
+    int 21h
+    lea dx, m12
+    mov ah, 9
+    int 21h
+    lea dx, m13
+    mov ah, 9
+    int 21h
+    lea dx, m14
+    mov ah, 9
+    int 21h  
+    
+    mov CATEGORY, 1
+    jmp order_input
+
+;========================= Chips ===========================
+chips:
+    lea dx, m8
+    mov ah, 9
+    int 21h
+
+    lea dx, m15
+    mov ah, 9
+    int 21h
+    lea dx, m16
+    mov ah, 9
+    int 21h
+    lea dx, m17
+    mov ah, 9
+    int 21h
+    lea dx, m18
+    mov ah, 9
+    int 21h
+    lea dx, m19
+    mov ah, 9
+    int 21h
+    lea dx, m20
+    mov ah, 9
+    int 21h 
+    
+    mov CATEGORY,2
+    jmp order_input
+
+;========================= Bakery ===========================
+bakery:
+    lea dx, m8
+    mov ah, 9
+    int 21h
+
+    lea dx, m21
+    mov ah, 9
+    int 21h
+    lea dx, m22
+    mov ah, 9
+    int 21h
+    lea dx, m23
+    mov ah, 9
+    int 21h
+    lea dx, m24
+    mov ah, 9
+    int 21h
+    lea dx, m25
+    mov ah, 9
+    int 21h
+    lea dx, m26
+    mov ah, 9
+    int 21h 
+    
+    mov CATEGORY,3
+    jmp order_input
+
+;========================= Dairy ===========================
+dairy:
+    lea dx, m8
+    mov ah, 9
+    int 21h
+
+    lea dx, m27
+    mov ah, 9
+    int 21h
+    lea dx, m28
+    mov ah, 9
+    int 21h
+    lea dx, m29
+    mov ah, 9
+    int 21h
+    lea dx, m30
+    mov ah, 9
+    int 21h
+    lea dx, m31
+    mov ah, 9
+    int 21h
+    lea dx, m32
+    mov ah, 9
+    int 21h   
+    
+    mov CATEGORY,4
+    jmp order_input
+
+;========================= Frozen ===========================
+frozen:
+    lea dx, m8
+    mov ah, 9
+    int 21h
+
+    lea dx, m33
+    mov ah, 9
+    int 21h
+    lea dx, m34
+    mov ah, 9
+    int 21h
+    lea dx, m35
+    mov ah, 9
+    int 21h
+    lea dx, m36
+    mov ah, 9
+    int 21h
+    lea dx, m37
+    mov ah, 9
+    int 21h
+    lea dx, m38
+    mov ah, 9
+    int 21h  
+    
+    mov CATEGORY,5
+    jmp order_input 
+    
+;================ for cart initialization=====================
+; Initialize cart variables
+    mov cart_size, 0
+    mov grand_total, 0
+    mov byte ptr [cart], '$'  ; Empty cart
+;==========end cart===============================  
+
+
+
+;========================= Order Input ===========================
+order_input:
+    lea dx, newline
+    mov ah, 9
+    int 21h
+
+    lea dx, M57
+    mov ah, 9
+    int 21h
+
+    mov ah, 1
+    int 21h
+    sub al, '0'
+    cmp al, 1
+    jb invalid_input
+    cmp al, 6
+    ja invalid_input
+    mov DRINK, al
+
+    lea dx, M58
+    mov ah, 9
+    int 21h
+
+    mov ah, 1
+    int 21h
+    sub al, '0'
+    cmp al, 1
+    jb invalid_input
+    cmp al, 9
+    ja invalid_input
+    mov QUANTITY, al
+
+    lea dx, M60
+    mov ah, 9
+    int 21h
+
+    lea dx, M61
+    mov ah, 9
+    int 21h  
+
+    call add_to_cart
+    
+    lea dx, M62       
+    mov ah, 9
+    int 21h
+
+    mov ah, 1
+    int 21h
+    cmp al, '1'
+    je main_menu
+    cmp al, '2'
+    je exit_program
+    cmp al, '3'      
+    je show_cart
+    jmp main_menu
+
+invalid_input:
+    lea dx, invalidMsg
+    call print_str
+    jmp order_input
+;=================================for cart option=================
+    
+    lea dx, M62       
+    mov ah, 9
+    int 21h
+;============================end_cart=========================
+
+    mov ah, 1
+    int 21h
+    cmp al, '1'
+    je main_menu
+    cmp al, '2'
+    je exit_program
+
+;===========================for going to cart=================
+    cmp al, '3'      
+    je show_cart
+;===========================end_cart========================
+    jmp main_menu
+;====================cart================================== 
+
+;========================= Number to String Procedure ===========================
+number_to_string proc
+    push ax
+    push bx
+    push cx
+    push dx
+    
+    mov bx, 10
+    mov cx, 0
+    
+    ; Handle zero case
+    cmp ax, 0
+    jne convert
+    mov byte ptr [di], '0'
+    inc di
+    jmp done
+    
+convert:
+    xor dx, dx
+    div bx
+    push dx
+    inc cx
+    cmp ax, 0
+    jne convert
+    
+store:
+    pop ax
+    add al, '0'
+    mov [di], al
+    inc di
+    loop store
+    
+done:
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+number_to_string endp
+;========================= Add to Cart Procedure ===========================
+
+add_to_cart proc
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+    
+    ; cart size
+    mov ax, cart_size
+    cmp ax, 180
+    jae cart_full
+    
+    ; Calculate price = price_table[item-1] * quantity
+    mov bh, 0
+    mov bl, DRINK      
+    dec bl            
+    
+    ; price table
+    mov si, offset drink_prices
+    cmp current_menu, 1
+    je got_price
+    mov si, offset chip_prices
+    cmp current_menu, 2
+    je got_price
+    mov si, offset bakery_prices
+    cmp current_menu, 3
+    je got_price
+    mov si, offset dairy_prices
+    cmp current_menu, 4
+    je got_price
+    mov si, offset frozen_prices
+    
+got_price:
+    
+    mov al, [si+bx]    
+    mov ah, 0        
+    
+    
+    mov bl, QUANTITY  
+    mov bh, 0         
+    mul bx            
+    add grand_total, ax 
+    mov bx, ax         
+    
+   
+    mov di, offset cart
+    add di, cart_size
+    
+    ; Find the item name
+    mov si, offset m9  ; Start with drinks menu
+    cmp current_menu, 1
+    je find_item
+    mov si, offset m15 ; Chips 
+    cmp current_menu, 2
+    je find_item
+    mov si, offset m21 ; Bakery
+    cmp current_menu, 3
+    je find_item
+    mov si, offset m27 ; Dairy 
+    cmp current_menu, 4
+    je find_item
+    mov si, offset m33 ; Frozen 
+    
+find_item:
+    
+    mov al, DRINK
+    mov ah, 0
+    dec ax             
+    mov cx, ax
+    
+    
+item_skip_loop:
+    jcxz found_item    ;new learned=thing jump if condition is met
+    add si, 22        
+    loop item_skip_loop
+    
+found_item:    
+    add si, 7          
+copy_name:
+    mov al, [si]
+    cmp al, ' '       
+    je name_done
+    cmp al, '$'        
+    je name_done
+    mov [di], al
+    inc si
+    inc di
+    jmp copy_name
+    
+name_done:
+    cmp byte ptr [di-1], ' '
+    jne no_space
+    dec di
+    
+no_space:
+    mov byte ptr [di], ',' 
+    inc di
+    
+    
+    mov al, QUANTITY
+    add al, '0'
+    mov [di], al
+    inc di
+    mov byte ptr [di], ',' 
+    inc di
+    
+    
+    mov ax, bx        
+    call number_to_string
+    
+    mov byte ptr [di], ';' 
+    inc di
+    
+   
+    mov ax, di
+    sub ax, offset cart
+    mov cart_size, ax
+    
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+
+cart_full:
+    lea dx, cart_full_msg
+    call print_str
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+add_to_cart endp
+
+;========================= Show Cart Procedure ===========================
+show_cart proc
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    
+    lea dx, cart_title
+    call print_str
+    
+   
+    cmp cart_size, 0
+    jne show_items
+    
+    lea dx, cart_empty
+    call print_str
+    jmp cart_options
+    
+show_items:
+    mov si, offset cart
+    mov cx, 1         
+    
+    lea dx, m_cart_header 
+    call print_str
+    
+item_loop:
+    cmp byte ptr [si], '$'
+    je show_total
+    cmp byte ptr [si], 0  
+    je show_total
+    
+   
+    lea dx, m_cart_item
+    call print_str
+    
+    mov ax, cx       
+    mov di, offset input_pass
+    call number_to_string
+    mov byte ptr [di], '.'
+    inc di
+    mov byte ptr [di], ' '
+    inc di
+    mov byte ptr [di], '$'
+    lea dx, input_pass
+    call print_str
+    
+   
+    mov bx, 0         
+show_name:
+    mov dl, [si]
+    cmp dl, ','
+    je name_end
+    cmp dl, '$'        
+    je show_total
+    cmp dl, ';'
+    je show_total
+    mov ah, 2
+    int 21h
+    inc si
+    inc bx
+    cmp bx, 15         
+    jb show_name
+    jmp align_name
+    
+name_end:
+    inc si           
+    
+    
+align_name:
+    cmp bx, 15
+    jae qty_start
+    mov ah, 2
+    mov dl, ' '
+    int 21h
+    inc bx
+    jmp align_name
+    
+qty_start:
+    
+    lea dx, cart_qty
+    call print_str
+    mov dl, [si]
+    cmp dl, '$'       
+    je show_total
+    cmp dl, ','       
+    je show_total
+    mov ah, 2
+    int 21h
+    inc si
+    cmp byte ptr [si], ',' ; Check for comma after quantity
+    jne show_total   
+    inc si             
+    
+    
+    lea dx, cart_price
+    call print_str
+    
+show_price:
+    mov dl, [si]
+    cmp dl, ';'
+    je price_end
+    cmp dl, '$'       
+    je show_total
+    cmp dl, 0
+    je show_total
+    mov ah, 2
+    int 21h
+    inc si
+    jmp show_price
+    
+price_end:
+    inc si           
+    
+    lea dx, newline   
+    call print_str
+    inc cx             
+    jmp item_loop
+    
+show_total:
+    lea dx, cart_total
+    call print_str
+    
+  
+    mov ax, grand_total      ; Display grand total
+    mov di, offset input_pass
+    call number_to_string
+    mov byte ptr [di], '$'
+    lea dx, input_pass
+    call print_str
+    
+    lea dx, newline
+    call print_str
+
+cart_options:
+    lea dx, m_cart_options2  ; "1. Clear Cart  2. Add More  3. Checkout"
+    call print_str
+    lea dx, m_cart_choice2   
+    call print_str
+
+   
+    mov ah, 1
+    int 21h
+
+    
+    cmp al, '1'
+    je clear_cart
+    cmp al, '2'
+    je return_to_menu 
+    cmp al, '3'
+    je checkout
+    cmp al, '4'        
+    je debug_cart
+    jmp cart_options     
+
+clear_cart:
+    mov cart_size, 0
+    mov grand_total, 0
+    mov byte ptr [cart], '$'  
+    lea dx, m_del_succes2     
+    call print_str
+    jmp show_cart
+
+return_to_menu:
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    jmp main_menu
+    
+checkout:
+    lea dx, newline
+    call print_str
+    lea dx, m_cart_total
+    call print_str
+    
+    mov ax, grand_total    ;grand total 
+    mov di, offset input_pass
+    call number_to_string
+    mov byte ptr [di], '$'
+    lea dx, input_pass
+    call print_str
+    
+    lea dx, newline
+    call print_str
+    lea dx, checkout_msg  
+    call print_str
+    mov ah, 1
+    int 21h
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    jmp exit_program
+    
+debug_cart:
+    call print_cart_contents
+    jmp cart_options
+    
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+show_cart endp
+
+
+;========================= Print Cart Contents Procedure ===========================
+print_cart_contents proc
+    push ax
+    push dx
+    push si
+    
+    lea dx, debug_cart_msg
+    call print_str
+    lea dx, newline
+    call print_str
+    
+    mov si, offset cart
+debug_loop:
+    mov dl, [si]
+    cmp dl, '$'
+    je debug_done
+    mov ah, 2
+    int 21h
+    inc si
+    jmp debug_loop
+    
+debug_done:
+    lea dx, newline
+    call print_str
+    
+    pop si
+    pop dx
+    pop ax
+    ret
+print_cart_contents endp
+    
+
+                  
+                  
+;LOW STOCK WARNING
+; --- Calculate stock offset ---
+    mov bl, DRINK       ; item number
+    dec bl              ; 0-based index
+
+    mov bh, 0
+    mov si, 0           ; SI = offset to correct category
+
+    mov al, CATEGORY
+    cmp al, 1
+    je is_drinks
+    cmp al, 2
+    je is_chips
+    cmp al, 3
+    je is_bakery
+    cmp al, 4
+    je is_dairy
+    cmp al, 5
+    je is_frozen
+    jmp skip_stock_check
+
+is_drinks:
+    lea si, drinks_stock
+    jmp reduce_stock
+is_chips:
+    lea si, chips_stock
+    jmp reduce_stock
+is_bakery:
+    lea si, bakery_stock
+    jmp reduce_stock
+is_dairy:
+    lea si, dairy_stock
+    jmp reduce_stock
+is_frozen:
+    lea si, frozen_stock
+    jmp reduce_stock
+
+reduce_stock:
+    add si, bx                 ; point to the correct item
+    mov al, [si]               ; current stock
+    sub al, QUANTITY           ; reduce by order amount
+    mov [si], al               ; update stock
+
+    cmp al, 2
+    jne skip_stock_check
+
+    lea dx, low_stock_msg
+    call print_str
+
+skip_stock_check:
+
+    
+    
+
+
+
+
+;========================= Exit ===========================
+exit_program:
+    mov ah, 4Ch
+    int 21h
+
+
+;========================= Helper Procedures ===========================
+new_line proc
+    mov ah, 2
+    mov dl, 13
+    int 21h
+    mov dl, 10
+    int 21h
+    ret
+new_line endp
+
+print_quantity proc
+    push ax
+    push dx
+
+    mov dl, ' '         ; Print space
+    mov ah, 2
+    int 21h
+
+    lea dx, qty_label   ; Print "Quantity: "
+    call print_str
+
+    mov al, [si]        ; Load the stock value
+    add al, '0'         ; Convert to ASCII
+    mov dl, al
+    mov ah, 2
+    int 21h
+
+    ; Check for low stock
+    cmp [si], 2
+    ja skip_low_stock
+
+    lea dx, low_stock_msg
+    call print_str
+
+skip_low_stock:
+    call new_line
+
+    pop dx
+    pop ax
+    ret
+print_quantity endp
+
+
+print_str proc
+    mov ah, 9
+    int 21h
+    ret
+print_str endp
+
+read_char proc
+    mov ah, 1
+    int 21h
+    ret
+read_char endp    
+
+
+show_qty proc
+    mov ah, 2
+    mov dl, 9
+    int 21h        ; tab
+
+    mov al, [si]
+    add al, '0'    ; convert to ASCII
+    mov dl, al
+    mov ah, 2
+    int 21h
+
+    cmp al, '2'    ; if <= 2 then LOW STOCK
+    ja skip_low
+    lea dx, low_stock_msg
+    call print_str
+
+skip_low:
+    lea dx, newline
+    call print_str
+    ret
+show_qty endp
+
+
+end main
+
