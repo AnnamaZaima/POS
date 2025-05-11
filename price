@@ -81,3 +81,8 @@ update_done:
     call print_str
     jmp start_menu
 
+
+
+
+current_price_msg db 13,10,'Current price: TK.$'
+new_price_msg db 13,10,'Enter new price (2 digits): $'
